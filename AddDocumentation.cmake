@@ -1,4 +1,3 @@
-
 include(ParseArguments)
 include(XSLTransform)
 find_package(BoostBook)
@@ -43,11 +42,11 @@ macro(add_documentation INPUT)
     MAKE_ALL_TARGET ${THIS_PROJECT_NAME}-html
     )
 
-# xsl_transform(${CMAKE_CURRENT_BINARY_DIR}/man ${DBK_FILE}
-#   STYLESHEET ${BOOSTBOOK_XSL_DIR}/manpages.xsl
-#   CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
-#   DIRECTORY man.manifest
-#   COMMENT "Generating man pages for ${THIS_PROJECT_NAME}."
-#   MAKE_ALL_TARGET ${THIS_PROJECT_NAME}-man)
+ xsl_transform(${CMAKE_CURRENT_BINARY_DIR}/man ${DBK_FILE}
+   STYLESHEET ${BOOSTBOOK_XSL_DIR}/manpages.xsl
+   CATALOG ${BOOSTBOOK_CATALOG}
+   DIRECTORY man.manifest
+   COMMENT "Generating man pages for ${THIS_PROJECT_NAME}."
+   MAKE_ALL_TARGET ${THIS_PROJECT_NAME}-man)
 
 endmacro(add_documentation INPUT)
