@@ -1,11 +1,10 @@
-
 set(CTOOLBOX_DIR ${CMAKE_BINARY_DIR}/CToolBox)
 
 if(NOT EXISTS ${CTOOLBOX_DIR})
 
   find_package(Wget REQUIRED)
   
-  execute_process(COMMAND ${WGET_EXECUTABLE}
+  execute_process(COMMAND ${WGET_EXECUTABLE} -nv
     http://github.com/purpleKarrot/CToolBox/tarball/master)
 
   file(GLOB CTOOLBOX_TGZ ${CMAKE_BINARY_DIR}/purpleKarrot-CToolBox-*.tar.gz)
