@@ -1,6 +1,7 @@
 include(ParseArguments)
 include(XSLTransform)
-find_package(BoostBook)
+find_package(BoostBook REQUIRED)
+find_package(DBLaTeX   REQUIRED)
 
 # Transform Quickbook into BoostBook XML
 macro(add_documentation INPUT)
@@ -15,6 +16,7 @@ macro(add_documentation INPUT)
 
   set(QBK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.qbk)
   set(DBK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.docbook)
+  set(PDF_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.pdf)
 
   # copy to destination directory because quickbook screws up xinclude paths 
   # when the output is not in the source directory
@@ -29,14 +31,20 @@ macro(add_documentation INPUT)
     CATALOG ${BOOSTBOOK_CATALOG}
     DIRECTORY HTML.manifest
     COMMENT "Generating HTML documentaiton for ${THIS_PROJECT_NAME}."
-    MAKE_TARGET ${THIS_PROJECT_NAME}-html
-    )
+    MAKE_TARGET ${THIS_PROJECT_NAME}-html)
 
- xsl_transform(${CMAKE_CURRENT_BINARY_DIR}/man ${DBK_FILE}
-   STYLESHEET ${BOOSTBOOK_XSL_DIR}/manpages.xsl
-   CATALOG ${BOOSTBOOK_CATALOG}
-   DIRECTORY man.manifest
-   COMMENT "Generating man pages for ${THIS_PROJECT_NAME}."
-   MAKE_TARGET ${THIS_PROJECT_NAME}-man)
+  xsl_transform(${CMAKE_CURRENT_BINARY_DIR}/man ${DBK_FILE}
+    STYLESHEET ${BOOSTBOOK_XSL_DIR}/manpages.xsl
+    CATALOG ${BOOSTBOOK_CATALOG}
+    DIRECTORY man.manifest
+    COMMENT "Generating man pages for ${THIS_PROJECT_NAME}."
+    MAKE_TARGET ${THIS_PROJECT_NAME}-man)
+
+  add_custom_command(OUTPUT ${PDF_FILE}
+    COMMAND ${DBLATEX_EXECUTABLE} -o ${PDF_FILE} ${DBK_FILE}
+    DEPENDS ${DBK_FILE})
+  add_custom_target(${THIS_PROJECT_NAME}-pdf DEPENDS ${PDF_FILE})
+  set_target_properties(${THIS_PROJECT_NAME}-pdf
+    PROPERTIES EXCLUDE_FROM_ALL ON)
 
 endmacro(add_documentation INPUT)
