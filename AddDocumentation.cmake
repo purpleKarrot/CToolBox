@@ -1,7 +1,9 @@
 include(ParseArguments)
 include(XSLTransform)
 find_package(BoostBook REQUIRED)
-find_package(DBLaTeX   REQUIRED)
+find_package(FOP)
+
+
 
 # Transform Quickbook into BoostBook XML
 macro(add_documentation INPUT)
@@ -16,6 +18,7 @@ macro(add_documentation INPUT)
 
   set(QBK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.qbk)
   set(DBK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.docbook)
+  set(FOP_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.fo)
   set(PDF_FILE ${CMAKE_CURRENT_BINARY_DIR}/${THIS_PROJECT_NAME}.pdf)
 
   # copy to destination directory because quickbook screws up xinclude paths 
@@ -53,11 +56,20 @@ macro(add_documentation INPUT)
     COMMENT "Generating man pages for ${THIS_PROJECT_NAME}."
     MAKE_TARGET ${THIS_PROJECT_NAME}-man)
 
-  add_custom_command(OUTPUT ${PDF_FILE}
-    COMMAND ${DBLATEX_EXECUTABLE} -o ${PDF_FILE} ${DBK_FILE}
-    DEPENDS ${DBK_FILE})
-  add_custom_target(${THIS_PROJECT_NAME}-pdf DEPENDS ${PDF_FILE})
-  set_target_properties(${THIS_PROJECT_NAME}-pdf
-    PROPERTIES EXCLUDE_FROM_ALL ON)
+  if(FOP_FOUND)
+    xsl_transform(${FOP_FILE} ${DBK_FILE}
+      STYLESHEET ${BOOSTBOOK_XSL_DIR}/fo.xsl
+      CATALOG ${BOOSTBOOK_CATALOG}
+      MAKE_TARGET ${THIS_PROJECT_NAME}-fo)
+
+    add_custom_command(OUTPUT ${PDF_FILE}
+      COMMAND ${FOP_EXECUTABLE} ${FOP_FILE} ${PDF_FILE}
+      DEPENDS ${FOP_FILE})
+    add_custom_target(${THIS_PROJECT_NAME}-pdf DEPENDS ${PDF_FILE})
+    set_target_properties(${THIS_PROJECT_NAME}-pdf
+      PROPERTIES EXCLUDE_FROM_ALL ON)
+  else(FOP_FOUND)
+    message(STATUS "Could not find FOP. Creation of PDF documentation disabled."
+  endif(FOP_FOUND)
 
 endmacro(add_documentation INPUT)
