@@ -63,7 +63,7 @@ macro(add_documentation INPUT)
       MAKE_TARGET ${THIS_PROJECT_NAME}-fo)
 
     add_custom_command(OUTPUT ${PDF_FILE}
-      COMMAND ${FOP_EXECUTABLE} ${FOP_FILE} ${PDF_FILE}
+      COMMAND ${FOP_EXECUTABLE} ${FOP_FILE} ${PDF_FILE} 2>/dev/null
       DEPENDS ${FOP_FILE})
     add_custom_target(${THIS_PROJECT_NAME}-pdf DEPENDS ${PDF_FILE})
     set_target_properties(${THIS_PROJECT_NAME}-pdf
