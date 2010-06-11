@@ -69,7 +69,7 @@ macro(add_documentation INPUT)
     set_target_properties(${THIS_PROJECT_NAME}-pdf
       PROPERTIES EXCLUDE_FROM_ALL ON)
   else(FOP_FOUND)
-    message(STATUS "Could not find FOP. Creation of PDF documentation disabled."
+    message(STATUS "Install Apache FOP to build PDF documentation.")
   endif(FOP_FOUND)
 
 endmacro(add_documentation INPUT)
