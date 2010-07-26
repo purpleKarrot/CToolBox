@@ -7,6 +7,7 @@ find_package(FOP)
 
 # Transform Quickbook into BoostBook XML
 macro(add_documentation INPUT)
+  parse_arguments(DOCUMENTATION "IMAGES" "" ${ARGN})
 
   # If INPUT is not a full path, it's in the current source directory.
   get_filename_component(INPUT_PATH ${INPUT} PATH)
@@ -26,10 +27,10 @@ macro(add_documentation INPUT)
   add_custom_command(OUTPUT ${QBK_FILE}
     COMMAND ${CMAKE_COMMAND} -E copy ${INPUT_PATH} ${QBK_FILE}
     DEPENDS ${INPUT_PATH})
-    
+
   # copy all dependencies that are not built
   set(DEPENDENCIES)
-  foreach(file ${ARGN})
+  foreach(file ${DOCUMENTATION_DEFAULT_ARGS})
     set(srcfile ${CMAKE_CURRENT_SOURCE_DIR}/${file})
     set(binfile ${CMAKE_CURRENT_BINARY_DIR}/${file})
     if(EXISTS ${srcfile})
@@ -38,7 +39,24 @@ macro(add_documentation INPUT)
         DEPENDS ${srcfile})
     endif(EXISTS ${srcfile})
     set(DEPENDENCIES ${DEPENDENCIES} ${binfile})
-  endforeach(file ${ARGN})
+  endforeach(file ${DOCUMENTATION_DEFAULT_ARGS})
+
+  # copy images into different locations... quick and dirty...
+  file(COPY ${DOCUMENTATION_IMAGES}
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/images)
+  file(COPY ${DOCUMENTATION_IMAGES}
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/html/images)
+
+  foreach(file ${DOCUMENTATION_IMAGES})
+    set(srcfile ${CMAKE_CURRENT_SOURCE_DIR}/${file})
+    set(binfile ${CMAKE_CURRENT_BINARY_DIR}/${file})
+    if(EXISTS ${srcfile})
+      add_custom_command(OUTPUT ${binfile}
+        COMMAND ${CMAKE_COMMAND} -E copy ${srcfile} ${binfile}
+        DEPENDS ${srcfile})
+    endif(EXISTS ${srcfile})
+    set(DEPENDENCIES ${DEPENDENCIES} ${binfile})
+  endforeach(file ${DOCUMENTATION_IMAGES})
 
   quickbook_to_docbook(${DBK_FILE} ${QBK_FILE} ${DEPENDENCIES})
 
@@ -60,11 +78,14 @@ macro(add_documentation INPUT)
     xsl_transform(${FOP_FILE} ${DBK_FILE}
       STYLESHEET ${BOOSTBOOK_XSL_DIR}/fo.xsl
       CATALOG ${BOOSTBOOK_CATALOG}
+      PARAMETERS img.src.path=${CMAKE_CURRENT_BINARY_DIR}/images/
       MAKE_TARGET ${THIS_PROJECT_NAME}-fo)
 
     add_custom_command(OUTPUT ${PDF_FILE}
       COMMAND ${FOP_EXECUTABLE} ${FOP_FILE} ${PDF_FILE} 2>/dev/null
-      DEPENDS ${FOP_FILE})
+      DEPENDS ${FOP_FILE}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      )
     add_custom_target(${THIS_PROJECT_NAME}-pdf DEPENDS ${PDF_FILE})
     set_target_properties(${THIS_PROJECT_NAME}-pdf
       PROPERTIES EXCLUDE_FROM_ALL ON)
