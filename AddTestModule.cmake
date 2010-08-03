@@ -3,10 +3,8 @@
 # http://svn.boost.org/svn/boost/trunk/libs/test/doc/src/UTF.report.xsd
 
 set(TEST_MODULE_FLAGS
-  --output_format=XML
-  --build_info=yes
   --log_level=all
-  --report_level=detailed
+  --report_level=no
   --result_code=no
   )
 
@@ -42,14 +40,14 @@ macro(ADD_TEST_MODULE NAME)
   
   set(${NAME}_LOG_XML    ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_log.xml)
   set(${NAME}_REPORT_XML ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_report.xml)
-  get_target_property(TEST_MODULE_EXECUTABLE ${NAME} LOCATION)
+  get_target_property(${NAME}_EXECUTABLE ${NAME} LOCATION)
 
   add_custom_command(
     OUTPUT
       ${${NAME}_LOG_XML}
       ${${NAME}_REPORT_XML}
     COMMAND
-      ${TEST_MODULE_EXECUTABLE} ${TEST_MODULE_FLAGS}
+      ${${NAME}_EXECUTABLE} ${TEST_MODULE_FLAGS}
         1> ${${NAME}_LOG_XML} 
         2> ${${NAME}_REPORT_XML}
     DEPENDS
