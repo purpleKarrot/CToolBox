@@ -2,7 +2,8 @@
 include(FindPackageHandleStandardArgs)
 
 # Find the QuickBook executable
-find_program(QUICKBOOK_EXECUTABLE quickbook)
+find_program(QUICKBOOK_EXECUTABLE quickbook
+  PATHS $ENV{BOOST_ROOT}/dist/bin)
 find_package_handle_standard_args(QUICKBOOK DEFAULT_MSG QUICKBOOK_EXECUTABLE)
 
 # Find the DocBook DTD (version 4.2)
@@ -19,13 +20,13 @@ find_package_handle_standard_args(DOCBOOK_XSL DEFAULT_MSG DOCBOOK_XSL_DIR)
 
 #Find the BoostBook DTD
 find_path(BOOSTBOOK_DTD_DIR boostbook.dtd
-  PATHS /usr/share/boostbook/dtd/
+  PATHS /usr/share/boostbook/dtd $ENV{BOOST_ROOT}/dist/share/boostbook/dtd
   DOC "Path to the BoostBook DTD")
 find_package_handle_standard_args(BOOSTBOOK_DTD DEFAULT_MSG BOOSTBOOK_DTD_DIR)
 
 #Find the BoostBook XSL stylesheets
 find_path(BOOSTBOOK_XSL_DIR docbook.xsl
-  PATHS /usr/share/boostbook/xsl/
+  PATHS /usr/share/boostbook/xsl $ENV{BOOST_ROOT}/dist/share/boostbook/xsl
   DOC "Path to the BoostBook XSL stylesheets")
 find_package_handle_standard_args(BOOSTBOOK_XSL DEFAULT_MSG BOOSTBOOK_XSL_DIR)
 
