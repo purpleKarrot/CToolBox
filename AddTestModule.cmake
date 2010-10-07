@@ -8,9 +8,7 @@ set(TEST_MODULE_FLAGS
   --result_code=no
   )
 
-find_package(Boost 1.40.0 REQUIRED
-  COMPONENTS unit_test_framework
-  )
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 
 #   add_test_module(name source1 [source2 [source3 [...]]])
@@ -26,7 +24,7 @@ macro(ADD_TEST_MODULE NAME)
 
   set(MAIN_CPP ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_main.cpp)
 
-  file(WRITE ${MAIN_CPP} "#define BOOST_TEST_MODULE ${name}\n")
+  file(WRITE ${MAIN_CPP} "#define BOOST_TEST_MODULE ${NAME}\n")
 
   if(NOT Boost_USE_STATIC_LIBS)
     file(APPEND ${MAIN_CPP} "#define BOOST_TEST_DYN_LINK\n")
