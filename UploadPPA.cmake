@@ -21,11 +21,20 @@ ENDIF(NOT CPACK_DEBIAN_PACKAGE_SECTION)
 # Priority: (recommended)
 IF(NOT CPACK_DEBIAN_PACKAGE_PRIORITY)
   SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-ENDIF(NOT CPACK_DEBIAN_PACKAGE_PRIORITY )
+ENDIF(NOT CPACK_DEBIAN_PACKAGE_PRIORITY)
 
+file(STRINGS ${CPACK_PACKAGE_DESCRIPTION_FILE} DESC_LINES)
+foreach(LINE ${DESC_LINES})
+  set(DEB_LONG_DESCRIPTION "${DEB_LONG_DESCRIPTION} ${LINE}\n")
+endforeach(LINE ${DESC_LINES})
+
+file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/Debian)
 set(DEBIAN_SOURCE_DIR ${CMAKE_BINARY_DIR}/Debian/${CPACK_DEBIAN_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-source)
 execute_process(COMMAND ${CMAKE_COMMAND} -E
   copy_directory ${CMAKE_SOURCE_DIR} ${DEBIAN_SOURCE_DIR}
+  )
+execute_process(COMMAND ${CMAKE_COMMAND} -E
+  remove_directory ${DEBIAN_SOURCE_DIR}/.git
   )
 
 file(MAKE_DIRECTORY ${DEBIAN_SOURCE_DIR}/debian)
@@ -51,33 +60,23 @@ file(APPEND ${DEBIAN_CONTROL} "cmake\n"
   "\n"
   "Package: ${CPACK_DEBIAN_PACKAGE_NAME}\n"
   "Architecture: any\n"
-  "Depends: \${shlibs:Depends}\n"
+  "Depends: ${CPACK_DEBIAN_PACKAGE_DEPENDS}\n"
   "Description: ${CPACK_PACKAGE_DESCRIPTION_SUMMARY}\n"
+  "${DEB_LONG_DESCRIPTION}"
   )
 
-# split desc in lines
-# for each line print " line"
-
-#		for (std::map<std::string, cmCPackComponentGroup>::iterator it =
-#			this->ComponentGroups.begin(); it != this->ComponentGroups.end(); ++it)
-#		{
-#			const cmCPackComponentGroup& group = it->second;
-#
-#			control << "Package: " << name << '-' << group.Name << std::endl;
-#			control << "Architecture: any\n";
-#			control << "Description: " << summary << ": " << group.DisplayName;
-#			control << "\n ";
-#			std::copy(desc.begin(), desc.end(), //
-#				std::ostream_iterator<cmStdString>(control, "\n "));
-#			control << ".\n ";
-#
-#			std::vector<cmStdString> group_desc;
-#			cmSystemTools::Split(group.Description.c_str(), group_desc);
-#			std::copy(group_desc.begin(), group_desc.end(), //
-#				std::ostream_iterator<cmStdString>(control, "\n "));
-#			control << std::endl;
-#		}
-#	}
+foreach(COMPONENT ${CPACK_COMPONENTS_ALL})
+  string(TOUPPER ${COMPONENT} UPPER_COMPONENT)
+  file(APPEND ${DEBIAN_CONTROL} "\n"
+    "Package: ${CPACK_DEBIAN_PACKAGE_NAME}-${COMPONENT}\n"
+    "Architecture: any\n"
+    "Description: ${CPACK_PACKAGE_DESCRIPTION_SUMMARY}"
+    ": ${CPACK_COMPONENT_${UPPER_COMPONENT}_DISPLAY_NAME}\n"
+    "${DEB_LONG_DESCRIPTION}"
+    " .\n"
+    " ${CPACK_COMPONENT_${UPPER_COMPONENT}_DESCRIPTION}\n"
+    )
+endforeach(COMPONENT ${CPACK_COMPONENTS_ALL})
 
 ##############################################################################
 # debian/copyright
@@ -105,21 +104,25 @@ file(WRITE ${DEBIAN_RULES}
   "binary-indep: build\n"
   "\n"
   "binary-arch: build\n"
+  "	cd $(BUILDDIR); cmake -DCOMPONENT=Unspecified -DCMAKE_INSTALL_PREFIX=../debian/tmp/usr -P cmake_install.cmake\n"
+  "	mkdir debian/tmp/DEBIAN\n"
+  "	dpkg-gencontrol -p${CPACK_DEBIAN_PACKAGE_NAME}\n"
+  "	dpkg --build debian/tmp ..\n"
   )
 
 foreach(COMPONENT ${CPACK_COMPONENTS_ALL})
+  set(PATH debian/tmp_${COMPONENT})
+  set(PACKAGE ${CPACK_DEBIAN_PACKAGE_NAME}-${COMPONENT})
   file(APPEND ${DEBIAN_RULES}
-    "	cd $(BUILDDIR); cmake"
-    " -DCOMPONENT=${COMPONENT}"
-    " -DCMAKE_INSTALL_PREFIX=../debian/tmp/usr"
-    " -P cmake_install.cmake\n"
+    "	cd $(BUILDDIR); cmake -DCOMPONENT=${COMPONENT} -DCMAKE_INSTALL_PREFIX=../${PATH}/usr -P cmake_install.cmake\n"
+    "	mkdir ${PATH}/DEBIAN\n"
+    "	dpkg-gencontrol -p${PACKAGE} -P${PATH}\n"
+    "	dpkg --build ${PATH} ..\n"
     )
 endforeach(COMPONENT ${CPACK_COMPONENTS_ALL})
 
 file(APPEND ${DEBIAN_RULES}
-  "	mkdir debian/tmp/DEBIAN\n"
-  "	dpkg-gencontrol\n"
-  "	dpkg --build debian/tmp ..\n\n"
+  "\n"
   "clean:\n"
   "	rm -f build\n"
   "	rm -rf $(BUILDDIR)\n"
