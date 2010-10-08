@@ -117,6 +117,8 @@ foreach(COMPONENT ${CPACK_COMPONENTS_ALL})
 endforeach(COMPONENT ${CPACK_COMPONENTS_ALL})
 
 file(APPEND ${DEBIAN_RULES}
+  "	mkdir debian/tmp/DEBIAN\n"
+  "	dpkg-gencontrol\n"
   "	dpkg --build debian/tmp ..\n\n"
   "clean:\n"
   "	rm -f build\n"
