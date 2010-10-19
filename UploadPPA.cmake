@@ -1,3 +1,6 @@
+##
+# Copyright (c) 2010 Daniel Pfeifer <daniel@pfeifer-mail.de>
+##
 
 find_program(DEBUILD_EXECUTABLE debuild)
 find_program(DPUT_EXECUTABLE dput)
@@ -67,9 +70,14 @@ file(APPEND ${DEBIAN_CONTROL} "cmake\n"
 
 foreach(COMPONENT ${CPACK_COMPONENTS_ALL})
   string(TOUPPER ${COMPONENT} UPPER_COMPONENT)
+  set(DEPENDS "${CPACK_DEBIAN_PACKAGE_NAME}")
+  foreach(DEP ${CPACK_COMPONENT_${UPPER_COMPONENT}_DEPENDS})
+    set(DEPENDS "${DEPENDS}, ${CPACK_DEBIAN_PACKAGE_NAME}-${DEP}")
+  endforeach(DEP ${CPACK_COMPONENT_${UPPER_COMPONENT}_DEPENDS})
   file(APPEND ${DEBIAN_CONTROL} "\n"
     "Package: ${CPACK_DEBIAN_PACKAGE_NAME}-${COMPONENT}\n"
     "Architecture: any\n"
+    "Depends: ${DEPENDS}\n"
     "Description: ${CPACK_PACKAGE_DESCRIPTION_SUMMARY}"
     ": ${CPACK_COMPONENT_${UPPER_COMPONENT}_DISPLAY_NAME}\n"
     "${DEB_LONG_DESCRIPTION}"
